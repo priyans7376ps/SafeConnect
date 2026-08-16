@@ -21,11 +21,26 @@ class Settings:
     vapid_claim_email: str = os.getenv("VAPID_CLAIM_EMAIL", "mailto:security@safeconnect.local")
 
     @property
+    def normalized_database_url(self) -> str:
+        url = self.database_url
+        if url and url.startswith("postgres://"):
+            return url.replace("postgres://", "postgresql://", 1)
+        return url
+
+    @property
+    def is_production(self) -> bool:
+        return self.flask_env.lower() in ("production", "prod")
+
+    @property
     def cors_origin_list(self):
-        if not self.cors_origins:
-            return [self.frontend_url]
+        if not self.cors_origins or self.cors_origins.strip() == "*":
+            if self.is_production:
+                # In production, disallow wildcard CORS
+                return [self.frontend_url] if self.frontend_url else []
+            return ["*"]
         return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
 
 
 def get_settings():
     return Settings()
+
