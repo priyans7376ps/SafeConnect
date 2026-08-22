@@ -86,8 +86,8 @@ def create_app(test_config=None):
             TrustedContact,
             User,
         )
-        # Development / Testing auto table creation; Production uses `flask db upgrade`
-        if not app.config.get("TESTING") and not settings.is_production:
+        # Auto table creation for non-testing environments (Development and Production)
+        if not app.config.get("TESTING"):
             db.create_all()
 
     from app.routes import register_routes
